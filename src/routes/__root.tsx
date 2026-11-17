@@ -3,7 +3,7 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
 
-const APP_NAME = "Наречение";
+const APP_NAME = "Реальные истории";
 const base = import.meta.env.BASE_URL;
 
 export const Route = createRootRoute({

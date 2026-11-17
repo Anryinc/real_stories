@@ -72,10 +72,19 @@ function Board({ state, dispatch }: { state: GameState; dispatch: (action: Actio
   }
 }
 
-function Frame({ children }: { children: ReactNode }) {
+function Frame({ children, onEnd }: { children: ReactNode; onEnd?: () => void }) {
   return (
     <main className="min-h-dvh text-ink">
-      <div className="pad-safe mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 py-6">{children}</div>
+      {onEnd ? (
+        <button
+          type="button"
+          onClick={onEnd}
+          className="fixed top-3 right-5 left-5 z-40 mx-auto flex min-h-12 max-w-md items-center justify-center border-2 border-ink bg-paper font-sans text-sm font-bold uppercase tracking-wide"
+        >
+          Завершение игры
+        </button>
+      ) : null}
+      <div className={`pad-safe mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 py-6 ${onEnd ? "pt-24" : ""}`}>{children}</div>
     </main>
   );
 }
@@ -114,7 +123,11 @@ function Action({
 function Nameplate({ line }: { line: string }) {
   return (
     <header>
-      <p className="text-center font-display text-5xl leading-none font-semibold uppercase">Наречение</p>
+      <p className="text-center font-display text-5xl leading-none font-semibold uppercase">
+        Реальные
+        <br />
+        истории
+      </p>
       <div className="mt-2 border-t border-ink pt-px">
         <p className="border-t-4 border-ink pt-1 text-center font-sans text-xs font-bold uppercase tracking-widest">{line}</p>
       </div>
@@ -169,8 +182,8 @@ function Cover({ onSit }: { onSit: () => void }) {
           <Kicker>Передовица</Kicker>
           <div className="mt-4 space-y-4 font-display text-3xl leading-none font-semibold">
             <p>Каждый сдаёт один раз. Сколько вас — столько сдач.</p>
-            <p>Тема и как её рассказывать лежат одной полосой.</p>
-            <p>Истории — интервью газете. Победитель берёт балл.</p>
+            <p>Титул истории достаётся тому, кого признал стол.</p>
+            <p>Пересдача клеит трусливый титул тому, кто сдрейфил.</p>
           </div>
         </div>
         <div className="mt-auto pt-8">
@@ -183,7 +196,7 @@ function Cover({ onSit }: { onSit: () => void }) {
 
 function Count({ state, dispatch }: { state: GameState; dispatch: (action: Action) => void }) {
   return (
-    <Frame>
+    <Frame onEnd={() => dispatch({ type: "endGame" })}>
       <div className="rise flex flex-1 flex-col">
         <Nameplate line="Тираж" />
         <h2 className="mt-8 font-display text-5xl leading-none font-semibold uppercase">За столом</h2>
@@ -219,7 +232,7 @@ function Names({ state, dispatch }: { state: GameState; dispatch: (action: Actio
   const [tried, setTried] = useState(false);
   const error = nameError(state.draft);
   return (
-    <Frame>
+    <Frame onEnd={() => dispatch({ type: "endGame" })}>
       <form
         className="rise flex flex-1 flex-col"
         onSubmit={(event) => {
@@ -285,7 +298,7 @@ function Names({ state, dispatch }: { state: GameState; dispatch: (action: Actio
 function Lot({ state, dispatch }: { state: GameState; dispatch: (action: Action) => void }) {
   const dealer = state.players[state.dealer];
   return (
-    <Frame>
+    <Frame onEnd={() => dispatch({ type: "endGame" })}>
       <div className="rise flex flex-1 flex-col">
         <Nameplate line="Жребий" />
         <p className="mt-10 font-sans text-xs font-bold uppercase tracking-widest text-muted">Первым сдаёт</p>
@@ -309,7 +322,7 @@ function DealMark({ state }: { state: GameState }) {
 function Turn({ state, dispatch }: { state: GameState; dispatch: (action: Action) => void }) {
   const dealer = state.players[state.dealer]!;
   return (
-    <Frame>
+    <Frame onEnd={() => dispatch({ type: "endGame" })}>
       <div className="rise flex flex-1 flex-col">
         <DealMark state={state} />
         <Roster players={state.players} />
@@ -335,14 +348,14 @@ function Dealt({ state, dispatch }: { state: GameState; dispatch: (action: Actio
   const theme = state.themeId ? themeById(state.themeId) : null;
   const criterion = state.criterionId ? criterionById(state.criterionId) : null;
   return (
-    <Frame>
+    <Frame onEnd={() => dispatch({ type: "endGame" })}>
       <div className="rise flex flex-1 flex-col">
         <DealMark state={state} />
         <p className="mt-5 font-sans text-xs font-bold uppercase tracking-widest text-muted">Сдаёт</p>
         <h2 className="mt-1 font-display text-4xl leading-none font-semibold uppercase break-words">{fullTitle(dealer)}</h2>
         {state.flash ? (
           <p className="mt-3">
-            <Kicker>Нарекается: {state.flash}</Kicker>
+            <Kicker>За пересдачу: {state.flash}</Kicker>
           </p>
         ) : null}
         <Story theme={theme} criterion={criterion} />
@@ -361,7 +374,7 @@ function Dealt({ state, dispatch }: { state: GameState; dispatch: (action: Actio
           <div className="newsprint w-full max-w-md border-4 border-ink px-5 py-6 text-ink">
             <Kicker>Экстренный выпуск</Kicker>
             <p className="mt-4 font-display text-4xl leading-none font-semibold">
-              Пересдать обе карты? «{state.flash ?? "титул"}» останется. Ляжет штраф.
+              Пересдать обе? Тема сгорит. Тебе прилипнет трусливый титул, и ляжет штраф.
             </p>
             <div className="mt-6 flex flex-col gap-3">
               <Action onClick={() => dispatch({ type: "confirmReroll" })}>Пересдать</Action>
@@ -403,7 +416,7 @@ function Penalty({ state, dispatch }: { state: GameState; dispatch: (action: Act
   }, [running, left]);
 
   return (
-    <Frame>
+    <Frame onEnd={() => dispatch({ type: "endGame" })}>
       <div className="rise flex flex-1 flex-col">
         <Nameplate line="Штрафной выпуск" />
         <article className="mt-6 bg-ink px-4 py-6 text-paper">
@@ -441,7 +454,7 @@ function Vote({ state, dispatch }: { state: GameState; dispatch: (action: Action
   const theme = state.themeId ? themeById(state.themeId) : null;
   const criterion = state.criterionId ? criterionById(state.criterionId) : null;
   return (
-    <Frame>
+    <Frame onEnd={() => dispatch({ type: "endGame" })}>
       <div className="rise flex flex-1 flex-col">
         <Nameplate line="Итоговое голосование" />
         <Story theme={theme} criterion={criterion} />
@@ -477,12 +490,13 @@ function Result({ state, dispatch }: { state: GameState; dispatch: (action: Acti
   const winner = state.players.find((player) => state.winners?.includes(player.id));
   const last = state.dealsDone + 1 >= dealTotal(state);
   return (
-    <Frame>
+    <Frame onEnd={() => dispatch({ type: "endGame" })}>
       <div className="rise flex flex-1 flex-col">
         <Nameplate line="Итог сдачи" />
         <h2 className="mt-6 font-display text-4xl leading-none font-semibold uppercase break-words">
-          {winner ? `${fullTitle(winner)} берёт балл.` : "Балл не взят."}
+          {winner ? `${fullTitle(winner)} забирает балл.` : "Балл не взят."}
         </h2>
+        {state.flash ? <p className="mt-4 font-display text-2xl leading-tight">Стол признал: {state.flash}.</p> : null}
         <ul className="mt-8 flex flex-col gap-4 border-t-4 border-ink pt-4">
           {state.players.map((player) => (
             <li key={player.id} className="border-b border-ink pb-3">
@@ -518,7 +532,7 @@ function Chronicle({ state, dispatch }: { state: GameState; dispatch: (action: A
     <Frame>
       <div className="rise flex flex-1 flex-col">
         <Nameplate line="Вечерний выпуск" />
-        <h2 className="mt-6 font-display text-5xl leading-none font-semibold uppercase">И сели за стол</h2>
+        <h2 className="mt-6 font-display text-5xl leading-none font-semibold uppercase">Сводка</h2>
         <ul className="mt-6 flex flex-col gap-4 border-t-4 border-ink pt-4">
           {state.players.map((player) => (
             <li key={player.id} className="border-b border-ink pb-3">
@@ -534,9 +548,9 @@ function Chronicle({ state, dispatch }: { state: GameState; dispatch: (action: A
           {extra.length > 0 ? <p>Длиннее всех титул у {joinList(extra.map(fullTitle))}.</p> : null}
         </div>
         <div className="mt-auto flex flex-col gap-3 pt-8">
-          <Action onClick={() => dispatch({ type: "rematch" })}>Ещё одна летопись</Action>
-          <Action tone="ghost" onClick={() => dispatch({ type: "newTable" })}>
-            Другой стол
+          <Action onClick={() => dispatch({ type: "home" })}>На главную</Action>
+          <Action tone="ghost" onClick={() => dispatch({ type: "rematch" })}>
+            Ещё раз
           </Action>
         </div>
       </div>

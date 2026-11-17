@@ -2,6 +2,7 @@ import {
   criteria,
   penalties,
   penaltyById,
+  penaltyEpithets,
   themeById,
   themes,
   type Gender,
@@ -74,8 +75,10 @@ export type Action =
   | { type: "toVote" }
   | { type: "pick"; id: string }
   | { type: "confirmVote" }
+  | { type: "endGame" }
   | { type: "next" }
   | { type: "rematch" }
+  | { type: "home" }
   | { type: "newTable" };
 
 const PHASES: readonly Phase[] = [
@@ -214,6 +217,14 @@ function grant(player: Player, themeId: string): { player: Player; word: string 
   return { player: { ...player, epithets: [...player.epithets, word] }, word };
 }
 
+function grantPenalty(player: Player): { player: Player; word: string } {
+  const pool = penaltyEpithets[player.gender];
+  const fresh = pool.filter((word) => !player.epithets.includes(word));
+  const bag = fresh.length > 0 ? fresh : pool;
+  const word = bag[Math.floor(Math.random() * bag.length)]!;
+  return { player: { ...player, epithets: [...player.epithets, word] }, word };
+}
+
 function withPlayer(players: Player[], index: number, next: Player): Player[] {
   return players.map((player, i) => (i === index ? next : player));
 }
@@ -280,7 +291,6 @@ export function reduce(state: GameState, action: Action): GameState {
       if (state.phase !== "turn") return state;
       const themeDraw = take(state.themeDeck, state.themeDiscard, []);
       const criterionDraw = take(state.criterionDeck, state.criterionDiscard, state.criterionDiscard.slice(-1));
-      const granted = grant(state.players[state.dealer]!, themeDraw.id);
       return {
         ...state,
         ...emptyRound(),
@@ -290,8 +300,6 @@ export function reduce(state: GameState, action: Action): GameState {
         criterionDiscard: criterionDraw.discard,
         themeId: themeDraw.id,
         criterionId: criterionDraw.id,
-        players: withPlayer(state.players, state.dealer, granted.player),
-        flash: granted.word,
         phase: "dealt",
       };
     }
@@ -304,6 +312,7 @@ export function reduce(state: GameState, action: Action): GameState {
     case "confirmReroll": {
       if (state.phase !== "dealt" || state.confirm !== "both" || !state.themeId || !state.criterionId) return state;
       const penaltyDraw = take(state.penaltyDeck, state.penaltyDiscard, state.penaltiesThisDeal);
+      const shamed = grantPenalty(state.players[state.dealer]!);
       return {
         ...state,
         confirm: null,
@@ -313,6 +322,8 @@ export function reduce(state: GameState, action: Action): GameState {
         criterionDiscard: [...state.criterionDiscard, state.criterionId],
         themeId: null,
         criterionId: null,
+        players: withPlayer(state.players, state.dealer, shamed.player),
+        flash: shamed.word,
         penaltyDeck: penaltyDraw.deck,
         penaltyDiscard: penaltyDraw.discard,
         penaltyId: penaltyDraw.id,
@@ -333,7 +344,6 @@ export function reduce(state: GameState, action: Action): GameState {
         : [...state.penaltyDiscard, state.penaltyId];
       const themeDraw = take(state.themeDeck, state.themeDiscard, state.themeDiscard.slice(-1));
       const criterionDraw = take(state.criterionDeck, state.criterionDiscard, state.criterionDiscard.slice(-1));
-      const granted = grant(state.players[state.dealer]!, themeDraw.id);
       return {
         ...state,
         themeDeck: themeDraw.deck,
@@ -343,8 +353,6 @@ export function reduce(state: GameState, action: Action): GameState {
         penaltyDiscard,
         themeId: themeDraw.id,
         criterionId: criterionDraw.id,
-        players: withPlayer(state.players, state.dealer, granted.player),
-        flash: granted.word,
         penaltyId: null,
         penaltyDeadline: null,
         pendingReroll: null,
@@ -364,10 +372,19 @@ export function reduce(state: GameState, action: Action): GameState {
       if (state.phase !== "vote" || !state.pick) return state;
       if (!state.players.some((player) => player.id === state.pick)) return state;
       const pick = state.pick;
-      const players = state.players.map((player) =>
-        player.id === pick ? { ...player, score: player.score + 1 } : player,
+      if (!state.themeId) return state;
+      const index = state.players.findIndex((player) => player.id === pick);
+      if (index < 0) return state;
+      const granted = grant(state.players[index]!, state.themeId);
+      const players = state.players.map((player, i) =>
+        i === index ? { ...granted.player, score: player.score + 1 } : player,
       );
-      return { ...state, pick: null, winners: [pick], players, phase: "result" };
+      return { ...state, pick: null, winners: [pick], players, flash: granted.word, phase: "result" };
+    }
+    case "endGame": {
+      if (state.phase === "cover" || state.phase === "chronicle") return state;
+      if (state.players.length < 2) return initialState();
+      return { ...state, ...emptyRound(), phase: "chronicle" };
     }
     case "next": {
       if (state.phase !== "result") return state;
@@ -396,6 +413,8 @@ export function reduce(state: GameState, action: Action): GameState {
         phase: "lot",
       };
     }
+    case "home":
+      return initialState();
     case "newTable":
       return { ...initialState(), phase: "count" };
     default:
