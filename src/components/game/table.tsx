@@ -132,8 +132,8 @@ function HowTo({ onClose }: { onClose: () => void }) {
           </p>
           <p>
             <span className="font-bold">Тема.</span> Жребий решает, кто сдаёт первым. На карточке — тема и то, какая
-            история побеждает: самая смешная, самая постыдная и так далее. Снизу редакция орёт, чего ей надо. Это
-            затравка, её можно прочитать вслух.
+            история побеждает: самая смешная, самая постыдная и так далее. Снизу задание редакции. Его можно прочитать
+            вслух.
           </p>
           <p>
             <span className="font-bold">Рассказы.</span> Рассказывают все, включая того, кто раздал. История должна быть
@@ -192,6 +192,7 @@ function Action({
 }
 
 function Nameplate({ line }: { line: string }) {
+  const long = line.length > 28;
   return (
     <header>
       <p className="text-center font-display text-5xl leading-none font-semibold uppercase">
@@ -200,7 +201,13 @@ function Nameplate({ line }: { line: string }) {
         истории
       </p>
       <div className="mt-2 border-t border-ink pt-px">
-        <p className="border-t-4 border-ink pt-1 text-center font-sans text-xs font-bold uppercase tracking-widest">{line}</p>
+        <p
+          className={`border-t-4 border-ink pt-1 text-center font-sans font-bold uppercase ${
+            long ? "text-sm leading-snug" : "text-xs tracking-widest"
+          }`}
+        >
+          {line}
+        </p>
       </div>
     </header>
   );
@@ -248,7 +255,7 @@ function Cover({ onSit }: { onSit: () => void }) {
   return (
     <Frame>
       <div className="rise flex flex-1 flex-col">
-        <Nameplate line="Уличный листок · один телефон на стол" />
+        <Nameplate line="Журнал самых увлекательных историй из вашей жизни" />
         <div className="mt-8 border-t-4 border-ink pt-4">
           <Kicker>Передовица</Kicker>
           <p className="mt-4 font-sans text-lg leading-relaxed">
