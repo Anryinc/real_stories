@@ -32,7 +32,7 @@ const prerenderUrl = new URL("../node_modules/.nitro/prerender/index.mjs", impor
 const mod = await import(prerenderUrl.href);
 const response = await mod.default.fetch(new Request("http://local/narechenie/"));
 const html = await response.text();
-if (response.status !== 200 || !html.includes("Наречение") || !html.includes("/narechenie/assets/")) {
+if (response.status !== 200 || !html.includes("Реальные истории") || !html.includes("/narechenie/assets/")) {
   console.error(`[pages] prerender failed (${response.status}, ${html.length} bytes) after vite exit ${viteCode}`);
   process.exit(1);
 }
