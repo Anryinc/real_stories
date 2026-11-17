@@ -73,19 +73,90 @@ function Board({ state, dispatch }: { state: GameState; dispatch: (action: Actio
 }
 
 function Frame({ children, onEnd }: { children: ReactNode; onEnd?: () => void }) {
+  const [help, setHelp] = useState(false);
   return (
     <main className="min-h-dvh text-ink">
-      {onEnd ? (
-        <button
-          type="button"
-          onClick={onEnd}
-          className="fixed top-3 right-5 left-5 z-40 mx-auto flex min-h-12 max-w-md items-center justify-center border-2 border-ink bg-paper font-sans text-sm font-bold uppercase tracking-wide"
-        >
-          Завершение игры
-        </button>
-      ) : null}
-      <div className={`pad-safe mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 py-6 ${onEnd ? "pt-24" : ""}`}>{children}</div>
+      {help ? null : (
+        <div className="fixed top-3 right-5 left-5 z-40 mx-auto flex max-w-md items-stretch justify-end gap-2">
+          {onEnd ? (
+            <button
+              type="button"
+              onClick={onEnd}
+              className="flex min-h-12 flex-1 items-center justify-center border-2 border-ink bg-paper font-sans text-sm font-bold uppercase tracking-wide"
+            >
+              Завершение игры
+            </button>
+          ) : null}
+          <button
+            type="button"
+            aria-label="Как играть"
+            onClick={() => setHelp(true)}
+            className="flex size-12 shrink-0 items-center justify-center border-2 border-ink bg-paper font-display text-3xl leading-none font-semibold"
+          >
+            ?
+          </button>
+        </div>
+      )}
+      {help ? <HowTo onClose={() => setHelp(false)} /> : null}
+      <div className="pad-safe mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-24 pb-6">{children}</div>
     </main>
+  );
+}
+
+function HowTo({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/70 px-5 py-6 sm:items-center" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-labelledby="howto-title"
+        className="flex max-h-[min(85dvh,40rem)] w-full max-w-md flex-col border-4 border-ink bg-paper p-5"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <h2 id="howto-title" className="font-display text-4xl leading-none font-semibold uppercase">
+            Как играть
+          </h2>
+          <button
+            type="button"
+            aria-label="Закрыть"
+            onClick={onClose}
+            className="flex size-11 shrink-0 items-center justify-center border-2 border-ink font-display text-2xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+        <div className="mt-5 space-y-4 overflow-y-auto font-sans text-base leading-relaxed">
+          <p>
+            <span className="font-bold">Стол.</span> Один телефон на всех. Вас от двух до шести. Каждый называет себя и
+            выбирает род: от него зависят титулы.
+          </p>
+          <p>
+            <span className="font-bold">Тема.</span> Жребий решает, кто сдаёт первым. На карточке — тема и то, какая
+            история побеждает: самая смешная, самая постыдная и так далее. Снизу редакция орёт, чего ей надо. Это
+            затравка, её можно прочитать вслух.
+          </p>
+          <p>
+            <span className="font-bold">Рассказы.</span> Рассказывают все, включая того, кто раздал. История должна быть
+            вашей и настоящей. Смешная, стыдная или тяжёлая — всё годится. Людей вне стола не втягиваем: не звоним и не
+            пишем тем, кого здесь нет.
+          </p>
+          <p>
+            <span className="font-bold">Пересдача.</span> Один раз за ход можно пересдать обе карты. Тому, кто это
+            сделал, сразу прилипает трусливый титул и выпадает штраф. Штраф выполняется здесь же. Если на нём написана
+            минута, сначала запустите время.
+          </p>
+          <p>
+            <span className="font-bold">Голос.</span> Когда все рассказали, стол выбирает одну историю. Голосовать можно
+            за любого, в том числе за того, кто сдавал. Победитель получает балл и титул по теме. Титулы копятся перед
+            именем.
+          </p>
+          <p>
+            <span className="font-bold">Дальше.</span> Сдаёт следующий по кругу. Сдач столько, сколько людей за столом.
+            «Завершение игры» можно нажать в любой момент: будет сводка баллов и выход на главную.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -180,11 +251,11 @@ function Cover({ onSit }: { onSit: () => void }) {
         <Nameplate line="Уличный листок · один телефон на стол" />
         <div className="mt-8 border-t-4 border-ink pt-4">
           <Kicker>Передовица</Kicker>
-          <div className="mt-4 space-y-4 font-display text-3xl leading-none font-semibold">
-            <p>Каждый сдаёт один раз. Сколько вас — столько сдач.</p>
-            <p>Титул истории достаётся тому, кого признал стол.</p>
-            <p>Пересдача клеит трусливый титул тому, кто сдрейфил.</p>
-          </div>
+          <p className="mt-4 font-sans text-lg leading-relaxed">
+            Лучшая история — это ваша реальная история. Соберитесь командой друзей, определите тему истории и
+            расскажите свою историю компании. Лучшая история по теме побеждает в общем голосовании. Делитесь историями,
+            зарабатывайте титулы и просто развлекайтесь.
+          </p>
         </div>
         <div className="mt-auto pt-8">
           <Action onClick={onSit}>Сесть за стол</Action>
