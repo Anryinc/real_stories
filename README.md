@@ -4,4 +4,4 @@
 
 Играет от двух до шести. Сдач столько, сколько людей за столом. «Завершение игры» обрывает партию и показывает сводку.
 
-Сайт: https://anryinc.github.io/narechenie/
+Сайт: https://anryinc.github.io/real_stories/
