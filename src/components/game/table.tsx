@@ -141,7 +141,7 @@ function HowTo({ onClose }: { onClose: () => void }) {
             пишем тем, кого здесь нет.
           </p>
           <p>
-            <span className="font-bold">Пересдача.</span> Один раз за ход можно пересдать обе карты. Тому, кто это
+            <span className="font-bold">Другие карты.</span> Один раз за ход можно взять другую тему. Тому, кто это
             сделал, сразу прилипает трусливый титул и выпадает штраф. Штраф выполняется здесь же. Если на нём написана
             минута, сначала запустите время.
           </p>
@@ -433,14 +433,14 @@ function Dealt({ state, dispatch }: { state: GameState; dispatch: (action: Actio
         <h2 className="mt-1 font-display text-4xl leading-none font-semibold uppercase break-words">{fullTitle(dealer)}</h2>
         {state.flash ? (
           <p className="mt-3">
-            <Kicker>За пересдачу: {state.flash}</Kicker>
+            <Kicker>Штрафной титул: {state.flash}</Kicker>
           </p>
         ) : null}
         <Story theme={theme} criterion={criterion} />
         <p className="mt-4 font-sans text-sm text-muted">Каждый сдаёт интервью. Рассказывают все, включая того, кто раздал.</p>
         <div className="mt-auto flex flex-col gap-3 pt-6">
           <Action tone="ghost" disabled={state.rerolled} onClick={() => dispatch({ type: "askReroll" })}>
-            {state.rerolled ? "Уже пересдано" : "Пересдать обе"}
+            {state.rerolled ? "Другое уже взято" : "Взять другое"}
           </Action>
           <Action disabled={!theme || !criterion} onClick={() => dispatch({ type: "toVote" })}>
             Итоговое голосование
@@ -452,10 +452,10 @@ function Dealt({ state, dispatch }: { state: GameState; dispatch: (action: Actio
           <div className="newsprint w-full max-w-md border-4 border-ink px-5 py-6 text-ink">
             <Kicker>Экстренный выпуск</Kicker>
             <p className="mt-4 font-display text-4xl leading-none font-semibold">
-              Пересдать обе? Тема сгорит. Тебе прилипнет трусливый титул, и ляжет штраф.
+              Взять другое? Тема сгорит. Тебе прилипнет трусливый титул, и ляжет штраф.
             </p>
             <div className="mt-6 flex flex-col gap-3">
-              <Action onClick={() => dispatch({ type: "confirmReroll" })}>Пересдать</Action>
+              <Action onClick={() => dispatch({ type: "confirmReroll" })}>Взять</Action>
               <Action tone="ghost" onClick={() => dispatch({ type: "cancelReroll" })}>
                 Оставить
               </Action>

@@ -1,6 +1,6 @@
 import { isGameState, type GameState } from "./engine";
 
-const KEY = "narechenie.v2";
+const KEY = "narechenie.v3";
 
 export function loadGame(): GameState | null {
   try {
